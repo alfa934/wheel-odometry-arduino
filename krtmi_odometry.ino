@@ -71,7 +71,7 @@ void updateOdometry() {
   CounterB = 0;
   
   // Calculate the change in position and heading
-  float deltaDistance = (leftDistance + rightDistance) / 2.0;
+  float deltaDistance = (leftDistance + rightDistance + centerDistance) / 3.0;
   float deltaTheta    = (rightDistance - leftDistance) / TRACK_WIDTH_CM;
   
   // Update the position and heading
