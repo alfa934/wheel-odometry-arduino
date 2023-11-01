@@ -1,4 +1,5 @@
 #include "RotaryEncoder.h"
+//#include <SimpleKalmanFilter.h>
 
 /* CONSTANTS and VARIABLES */
 #define TRACK_WIDTH_CM 20.0
@@ -12,8 +13,21 @@ float x = 0.0; // x position in centimeters
 float y = 0.0; // y position in centimeters
 float theta = 0.0; // heading in radians
 
-int CounterB = 0; 
-void RotaryBack(); 
+//byte measureUncertainty = 1;
+//byte estimateUncertainty = 1;
+//float processVariance = 0.01;
+
+/*  Source: https://github.com/denyssene/SimpleKalmanFilter/
+ *  e_mea: Measurement Uncertainty - How much do we expect to our measurement vary
+ *  e_est: Estimation Uncertainty - Can be initilized with the same value as e_mea since the kalman filter will adjust its value.
+ *  q: Process Variance - usually a small number between 0.001 and 1 - how fast your measurement moves. Recommended 0.01. Should be tunned to your needs.
+ */
+//SimpleKalmanFilter kalmanX(measureUncertainty, estimateUncertainty, processVariance);  // Process noise, Measurement noise, Initial estimate
+//SimpleKalmanFilter kalmanY(measureUncertainty, estimateUncertainty, processVariance);
+//SimpleKalmanFilter kalmanTheta(measureUncertainty, estimateUncertainty,processVariance);
+
+int CounterC = 0; 
+void RotaryCenter(); 
 
 int CounterL = 0; 
 void RotaryLeft(); 
@@ -21,19 +35,19 @@ void RotaryLeft();
 int CounterR = 0;
 void RotaryRight(); 
 
-RotaryEncoder Rotary_Back(&RotaryBack, 2, 3, 1); // Pins 2 (DT), 3 (CLK), 4 (SW)
+RotaryEncoder Rotary_Center(&RotaryCenter, 2, 3, 1); // Pins 2 (DT), 3 (CLK), 4 (SW)
 RotaryEncoder Rotary_Left(&RotaryLeft, 19, 18, 1); 
 RotaryEncoder Rotary_Right(&RotaryRight, 20, 21, 1); 
 
-void RotaryBack()
+void RotaryCenter()
 {
-  const unsigned int state = Rotary_Back.GetState();
+  const unsigned int state = Rotary_Center.GetState();
   
   if (state & DIR_CW)  
-    CounterB++;
+    CounterC++;
     
   if (state & DIR_CCW)  
-    CounterB--;    
+    CounterC--;    
 }
 
 void RotaryLeft()
@@ -63,12 +77,12 @@ void updateOdometry() {
   // Calculate the distance traveled by each wheel
   float leftDistance   = CounterL / TICKS_TO_CM;
   float rightDistance  = CounterR / TICKS_TO_CM;
-  float centerDistance = CounterB / TICKS_TO_CM;
+  float centerDistance = CounterC / TICKS_TO_CM;
   
   // Reset encoder values
   CounterL = 0;
   CounterR = 0;
-  CounterB = 0;
+  CounterC = 0;
   
   // Calculate the change in position and heading
   float deltaDistance = (leftDistance + rightDistance + centerDistance) / 3.0;
@@ -78,6 +92,14 @@ void updateOdometry() {
   theta += deltaTheta;
   x += deltaDistance * cos(theta);
   y += deltaDistance * sin(theta);
+
+//  // kalman filter shit
+//  float filteredX = kalmanX.updateEstimate(x);
+//  float filteredY = kalmanY.updateEstimate(y);
+//  float filteredTheta = kalmanTheta.updateEstimate(theta);
+//  x = filteredX;
+//  y = filteredY;
+//  theta = filteredTheta;
 }
 
 unsigned long previousMillis = 0;
@@ -85,7 +107,7 @@ const long interval = 1;
 
 void setup()
 {
-  Rotary_Back.setup();  
+  Rotary_Center.setup();  
   Rotary_Left.setup();  
   Rotary_Right.setup();  
   Serial.begin(9600);  
